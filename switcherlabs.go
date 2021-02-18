@@ -42,6 +42,29 @@ var (
 	httpClient = &http.Client{
 		Timeout: defaultHTTPTimeout,
 	}
+
+	boolOperations = map[string]func(a, b bool) bool{
+		"==": func(a, b bool) bool { return a == b },
+		"!=": func(a, b bool) bool { return a != b },
+	}
+
+	numberOperations = map[string]func(a, b float64) bool{
+		"==": func(a, b float64) bool { return a == b },
+		"!=": func(a, b float64) bool { return a != b },
+		"<":  func(a, b float64) bool { return a < b },
+		"<=": func(a, b float64) bool { return a <= b },
+		">":  func(a, b float64) bool { return a > b },
+		">=": func(a, b float64) bool { return a >= b },
+	}
+
+	stringOperations = map[string]func(a, b string) bool{
+		"==": func(a, b string) bool { return a == b },
+		"!=": func(a, b string) bool { return a != b },
+		"<":  func(a, b string) bool { return a < b },
+		"<=": func(a, b string) bool { return a <= b },
+		">":  func(a, b string) bool { return a > b },
+		">=": func(a, b string) bool { return a >= b },
+	}
 )
 
 // Options is used to configure a new Switcherlabs client.
@@ -153,6 +176,61 @@ func (s *client) BoolFlag(opts FlagOptions) (bool, error) {
 		return booleanValue, nil
 	}
 
+	if len(f.DynamicRules) > 0 {
+		for _, rule := range f.DynamicRules {
+			expressionFlag := s.flagsByID[rule.Expression.FlagID]
+			expressionFlagKey := expressionFlag.Key
+
+			switch expressionFlag.Type {
+			case typeBoolean:
+				flagValue, err := s.BoolFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return false, err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(bool)
+
+				if boolOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(bool)
+					return ruleValue, nil
+				}
+			case typeNumber:
+				flagValue, err := s.NumberFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return false, err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(float64)
+
+				if numberOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(bool)
+					return ruleValue, nil
+				}
+			case typeString:
+				flagValue, err := s.StringFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return false, err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(string)
+
+				if stringOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(bool)
+					return ruleValue, nil
+				}
+			}
+		}
+	}
+
 	booleanValue = f.Value.(bool)
 	return booleanValue, nil
 }
@@ -203,6 +281,61 @@ func (s *client) NumberFlag(opts FlagOptions) (float64, error) {
 	if val, ok := s.overrides[opts.Key]; ok {
 		numberValue = val.Value.(float64)
 		return numberValue, nil
+	}
+
+	if len(f.DynamicRules) > 0 {
+		for _, rule := range f.DynamicRules {
+			expressionFlag := s.flagsByID[rule.Expression.FlagID]
+			expressionFlagKey := expressionFlag.Key
+
+			switch expressionFlag.Type {
+			case typeBoolean:
+				flagValue, err := s.BoolFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return 0, err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(bool)
+
+				if boolOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(float64)
+					return ruleValue, nil
+				}
+			case typeNumber:
+				flagValue, err := s.NumberFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return 0, err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(float64)
+
+				if numberOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(float64)
+					return ruleValue, nil
+				}
+			case typeString:
+				flagValue, err := s.StringFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return 0, err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(string)
+
+				if stringOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(float64)
+					return ruleValue, nil
+				}
+			}
+		}
 	}
 
 	numberValue = f.Value.(float64)
@@ -257,6 +390,61 @@ func (s *client) StringFlag(opts FlagOptions) (string, error) {
 		return stringValue, nil
 	}
 
+	if len(f.DynamicRules) > 0 {
+		for _, rule := range f.DynamicRules {
+			expressionFlag := s.flagsByID[rule.Expression.FlagID]
+			expressionFlagKey := expressionFlag.Key
+
+			switch expressionFlag.Type {
+			case typeBoolean:
+				flagValue, err := s.BoolFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return "", err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(bool)
+
+				if boolOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(string)
+					return ruleValue, nil
+				}
+			case typeNumber:
+				flagValue, err := s.NumberFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return "", err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(float64)
+
+				if numberOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(string)
+					return ruleValue, nil
+				}
+			case typeString:
+				flagValue, err := s.StringFlag(FlagOptions{
+					Key:        expressionFlagKey,
+					Identifier: opts.Identifier,
+				})
+				if err != nil {
+					return "", err
+				}
+
+				ruleExpressionValue := rule.Expression.Value.(string)
+
+				if stringOperations[rule.Expression.Op](flagValue, ruleExpressionValue) {
+					ruleValue := rule.Value.(string)
+					return ruleValue, nil
+				}
+			}
+		}
+	}
+
 	stringValue = f.Value.(string)
 	return stringValue, nil
 }
@@ -267,6 +455,7 @@ type client struct {
 	APIKey     string
 
 	flags      map[string]*flag
+	flagsByID  map[string]*flag
 	overrides  map[string]*override
 	identities map[string]*identity
 
@@ -369,8 +558,10 @@ func (s *client) refreshState() error {
 	}
 
 	flags := make(map[string]*flag, len(resp.Flags))
+	flagsByID := make(map[string]*flag, len(resp.Flags))
 	for _, f := range resp.Flags {
 		flags[f.Key] = f
+		flagsByID[f.ID] = f
 	}
 
 	overrides := make(map[string]*override, len(resp.Overrides))
@@ -382,6 +573,7 @@ func (s *client) refreshState() error {
 	defer s.mu.Unlock()
 
 	s.flags = flags
+	s.flagsByID = flagsByID
 	s.overrides = overrides
 
 	for identifier, i := range s.identities {
@@ -422,10 +614,18 @@ func (s *client) fetchIdentity(identifier string) (*identity, error) {
 }
 
 type flag struct {
-	ID    string      `json:"id"`
-	Key   string      `json:"key"`
-	Type  string      `json:"type"`
-	Value interface{} `json:"value"`
+	ID           string      `json:"id"`
+	Key          string      `json:"key"`
+	Type         string      `json:"type"`
+	Value        interface{} `json:"value"`
+	DynamicRules []struct {
+		Expression struct {
+			FlagID string      `json:"flag_id"`
+			Op     string      `json:"op"`
+			Value  interface{} `json:"value"`
+		}
+		Value interface{} `json:"value"`
+	} `json:"dynamic_rules"`
 }
 
 type override struct {
