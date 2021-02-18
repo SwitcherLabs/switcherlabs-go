@@ -120,11 +120,6 @@ func (s *client) BoolFlag(opts FlagOptions) (bool, error) {
 		return false, ErrInvalidFlagType
 	}
 
-	i, err := s.fetchIdentity(opts.Identifier)
-	if err != nil {
-		return false, nil
-	}
-
 	// The order in which flags are evaluated is as follows:
 	//
 	// 	1. Identity Override Value
@@ -141,10 +136,19 @@ func (s *client) BoolFlag(opts FlagOptions) (bool, error) {
 
 	var booleanValue bool
 
-	if val, ok := i.Overrides[opts.Key]; ok {
-		booleanValue = val.(bool)
-		return booleanValue, nil
-	} else if val, ok := s.overrides[opts.Key]; ok {
+	if opts.Identifier != "" {
+		i, err := s.fetchIdentity(opts.Identifier)
+		if err != nil {
+			return false, nil
+		}
+
+		if val, ok := i.Overrides[opts.Key]; ok {
+			booleanValue = val.(bool)
+			return booleanValue, nil
+		}
+	}
+
+	if val, ok := s.overrides[opts.Key]; ok {
 		booleanValue = val.Value.(bool)
 		return booleanValue, nil
 	}
@@ -168,11 +172,6 @@ func (s *client) NumberFlag(opts FlagOptions) (float64, error) {
 		return 0, ErrInvalidFlagType
 	}
 
-	i, err := s.fetchIdentity(opts.Identifier)
-	if err != nil {
-		return 0, err
-	}
-
 	// The order in which flags are evaluated is as follows:
 	//
 	// 	1. Identity Override Value
@@ -189,10 +188,19 @@ func (s *client) NumberFlag(opts FlagOptions) (float64, error) {
 
 	var numberValue float64
 
-	if val, ok := i.Overrides[opts.Key]; ok {
-		numberValue = val.(float64)
-		return numberValue, nil
-	} else if val, ok := s.overrides[opts.Key]; ok {
+	if opts.Identifier != "" {
+		i, err := s.fetchIdentity(opts.Identifier)
+		if err != nil {
+			return 0, err
+		}
+
+		if val, ok := i.Overrides[opts.Key]; ok {
+			numberValue = val.(float64)
+			return numberValue, nil
+		}
+	}
+
+	if val, ok := s.overrides[opts.Key]; ok {
 		numberValue = val.Value.(float64)
 		return numberValue, nil
 	}
@@ -216,11 +224,6 @@ func (s *client) StringFlag(opts FlagOptions) (string, error) {
 		return "", ErrInvalidFlagType
 	}
 
-	i, err := s.fetchIdentity(opts.Identifier)
-	if err != nil {
-		return "", err
-	}
-
 	// The order in which flags are evaluated is as follows:
 	//
 	// 	1. Identity Override Value
@@ -237,10 +240,19 @@ func (s *client) StringFlag(opts FlagOptions) (string, error) {
 
 	var stringValue string
 
-	if val, ok := i.Overrides[opts.Key]; ok {
-		stringValue = val.(string)
-		return stringValue, nil
-	} else if val, ok := s.overrides[opts.Key]; ok {
+	if opts.Identifier != "" {
+		i, err := s.fetchIdentity(opts.Identifier)
+		if err != nil {
+			return "", err
+		}
+
+		if val, ok := i.Overrides[opts.Key]; ok {
+			stringValue = val.(string)
+			return stringValue, nil
+		}
+	}
+
+	if val, ok := s.overrides[opts.Key]; ok {
 		stringValue = val.Value.(string)
 		return stringValue, nil
 	}
